@@ -15,7 +15,7 @@ function injectAddButtons() {
 
     reportCol.innerHTML = '';
     const btn = document.createElement('button');
-    btn.textContent = 'Add to Watchlist';
+    btn.textContent = 'Add to Nodisaar favourites';
     btn.className = 'nodisaar-btn';
     btn.style.cssText = `
       background: #e50914; color: #fff; border: none;

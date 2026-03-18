@@ -12,7 +12,7 @@ function injectAddButtons() {
     const href = titleAnchor.getAttribute('href');
 
     const btn = document.createElement('button');
-    btn.textContent = 'Add to Watchlist';
+    btn.textContent = 'Add to Nodisaar favourites';
     btn.type = 'button';
     btn.style.cssText = `
       background: #00a8e1; color: #fff; border: none;
