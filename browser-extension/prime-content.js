@@ -1,15 +1,14 @@
-function setAdded(btn) {
-  btn.textContent = '✓ Added (click to remove)';
-  btn.style.background = '#2ecc71';
-  btn.style.color = '#fff';
-  btn.dataset.added = "1";
+function setNotAdded(btn) {
+  btn.innerHTML = '<span style="font-size:14px;line-height:1">+</span> Add';
+  btn.classList.remove('added');
+  btn.dataset.added = "0";
 }
 
-function setNotAdded(btn) {
-  btn.textContent = 'Add to Nodisaar favourites';
-  btn.style.background = '#00a8e1';
-  btn.style.color = '#fff';
-  btn.dataset.added = "0";
+function setAdded(btn) {
+  btn.innerHTML = '✓ Added';
+  btn.classList.add('added');
+  btn.disabled = false;
+  btn.dataset.added = "1";
 }
 
 function injectAddButtons() {
@@ -27,12 +26,8 @@ function injectAddButtons() {
 
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.style.cssText = `
-      color: #fff; border: none;
-      padding: 6px 12px; border-radius: 4px; cursor: pointer;
-      font-size: 13px; font-family: inherit; margin-top: 6px;
-    `;
-
+    btn.className = 'nodisaar-btn';
+    
     btn.addEventListener('click', () => {
       chrome.storage.local.get(['prime'], ({ prime = [] }) => {
         const exists = prime.some(i => i.href === href);
@@ -57,6 +52,32 @@ function injectAddButtons() {
 
     deleteForm.parentNode.insertBefore(btn, deleteForm);
   });
+}
+
+// Inject Nodisaar button styles once
+if (!document.getElementById('nodisaar-styles')) {
+  const style = document.createElement('style');
+  style.id = 'nodisaar-styles';
+  style.textContent = `
+    .nodisaar-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #e50914, #00a8e1);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .nodisaar-btn:hover { background: #1f1f27; border-color: #3a3a47; color: #f0f0f0; }
+    .nodisaar-btn.added { background: #2ecc71; color: #fff; border-color: #2ecc71; }
+  `;
+  document.head.appendChild(style);
 }
 
 const observer = new MutationObserver(injectAddButtons);

@@ -1,40 +1,14 @@
-function setAdded(btn) {
-  btn.textContent = '✓ Added (click to remove)';
-  btn.style.cssText = `
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 8px 18px;
-    border-radius: 8px;
-    background: #2ecc71;
-    color: #fff;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    border: none;
-    cursor: pointer;
-    letter-spacing: 0.3px;
-  `;
-  btn.disabled = false;
-  btn.dataset.added = "1";
+function setNotAdded(btn) {
+  btn.innerHTML = '<span style="font-size:14px;line-height:1">+</span> Add';
+  btn.classList.remove('added');
+  btn.dataset.added = "0";
 }
 
-function setNotAdded(btn) {
-  btn.textContent = 'Add to Nodisaar';
-  btn.style.cssText = `
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 8px 18px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #e50914, #00a8e1);
-    color: #fff;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    text-decoration: none;
-    letter-spacing: 0.3px;
-    border: none;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.15s;
-  `;
-  btn.dataset.added = "0";
+function setAdded(btn) {
+  btn.innerHTML = '✓ Added';
+  btn.classList.add('added');
+  btn.disabled = false;
+  btn.dataset.added = "1";
 }
 
 function injectAddButtons() {
@@ -55,21 +29,6 @@ function injectAddButtons() {
     reportCol.innerHTML = '';
     const btn = document.createElement('button');
     btn.className = 'nodisaar-btn';
-     btn.style.cssText = `
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 8px 18px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #e50914, #00a8e1);
-      color: #fff;
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 13px;
-      text-decoration: none;
-      letter-spacing: 0.3px;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.15s;
-    `;
 
     btn.addEventListener('click', () => {
       chrome.storage.local.get(['netflix'], ({ netflix = [] }) => {
@@ -95,6 +54,32 @@ function injectAddButtons() {
 
     reportCol.appendChild(btn);
   });
+}
+
+// Inject Nodisaar button styles once
+if (!document.getElementById('nodisaar-styles')) {
+  const style = document.createElement('style');
+  style.id = 'nodisaar-styles';
+  style.textContent = `
+    .nodisaar-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #e50914, #00a8e1);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .nodisaar-btn:hover { background: #1f1f27; border-color: #3a3a47; color: #f0f0f0; }
+    .nodisaar-btn.added { background: #2ecc71; color: #fff; border-color: #2ecc71; }
+  `;
+  document.head.appendChild(style);
 }
 
 const observer = new MutationObserver(injectAddButtons);
