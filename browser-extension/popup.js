@@ -1,23 +1,29 @@
-const NETFLIX_URL  = "https://www.netflix.com/settings/viewed/";
-const PRIME_URL    = "https://www.primevideo.com/region/in/settings/watch-history/ref=atv_set_watch-history";
+const NETFLIX_URL = "https://www.netflix.com/settings/viewed/";
+const PRIME_URL   = "https://www.primevideo.com/region/in/settings/watch-history/ref=atv_set_watch-history";
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-const addButtons     = document.getElementById("add-buttons");
-const yourList       = document.getElementById("your-list");
-const yourEmpty      = document.getElementById("your-empty");
-const shareSection   = document.getElementById("share-section");
-const totalCount     = document.getElementById("total-count");
-const shareBtn       = document.getElementById("share-btn");
-const shareHint      = document.getElementById("share-hint");
-const shareBtnWrap   = document.getElementById("share-btn-wrap");
-const sharedMsgWrap  = document.getElementById("shared-msg-wrap");
-const sharedMsg      = document.getElementById("shared-msg");
-const copyBtn        = document.getElementById("copy-btn");
-const friendSection  = document.getElementById("friend-section");
-const friendList     = document.getElementById("friend-list");
-const unlockMsg      = document.getElementById("unlock-msg");
-const divider        = document.getElementById("divider");
-const loadingFriend  = document.getElementById("loading-friend");
+const shareSection      = document.getElementById("share-section");
+const totalCount        = document.getElementById("total-count");
+const shareBtn          = document.getElementById("share-btn");
+const shareHint         = document.getElementById("share-hint");
+const shareBtnWrap      = document.getElementById("share-btn-wrap");
+const sharedMsgWrap     = document.getElementById("shared-msg-wrap");
+const sharedMsg         = document.getElementById("shared-msg");
+const copyBtn           = document.getElementById("copy-btn");
+const friendSection     = document.getElementById("friend-section");
+const unlockMsg         = document.getElementById("unlock-msg");
+const divider           = document.getElementById("divider");
+const loadingFriend     = document.getElementById("loading-friend");
+
+const yourNetflixList    = document.getElementById("your-netflix-list");
+const yourNetflixEmpty   = document.getElementById("your-netflix-empty");
+const yourPrimeList      = document.getElementById("your-prime-list");
+const yourPrimeEmpty     = document.getElementById("your-prime-empty");
+
+const friendNetflixList  = document.getElementById("friend-netflix-list");
+const friendNetflixEmpty = document.getElementById("friend-netflix-empty");
+const friendPrimeList    = document.getElementById("friend-prime-list");
+const friendPrimeEmpty   = document.getElementById("friend-prime-empty");
 
 document.getElementById("btn-netflix").addEventListener("click", () => {
   chrome.tabs.create({ url: NETFLIX_URL });
@@ -26,52 +32,53 @@ document.getElementById("btn-prime").addEventListener("click", () => {
   chrome.tabs.create({ url: PRIME_URL });
 });
 
-// ── Render your list ──────────────────────────────────────────────────────────
-function renderYourList(netflix, prime) {
-  const all = [...netflix, ...prime];
-  const count = all.length;
-  totalCount.textContent = count;
-
-  if (count === 0) {
-    addButtons.style.display = "block";
-    yourList.style.display   = "none";
-    yourEmpty.style.display  = "none";
-    shareSection.style.display = "none";
+// ── Render a source section in Your Picks ────────────────────────────────────
+function renderYourSection(items, listEl, emptyEl, source) {
+  if (items.length === 0) {
+    listEl.innerHTML = "";
+    emptyEl.style.display = "block";
     return;
   }
 
-  addButtons.style.display = "none";
-  shareSection.style.display = "block";
+  emptyEl.style.display = "none";
+  listEl.innerHTML = "";
 
-  yourList.style.display  = "block";
-  yourEmpty.style.display = "none";
-  yourList.innerHTML = "";
-
-  all.forEach(item => {
+  items.forEach(item => {
     const li = document.createElement("li");
     li.className = "item";
     li.innerHTML = `
-      <span class="dot ${item.source === 'netflix' ? 'dot-n' : 'dot-p'}"></span>
       <span class="item-title" title="${item.title}">${item.title}</span>
-      <button class="item-remove" data-href="${item.href}" data-source="${item.source}" title="Remove">×</button>
+      <button class="item-remove" data-href="${item.href}" data-source="${source}" title="Remove">×</button>
     `;
-    yourList.appendChild(li);
+    listEl.appendChild(li);
   });
 
-  // Remove handlers
-  yourList.querySelectorAll(".item-remove").forEach(btn => {
+  listEl.querySelectorAll(".item-remove").forEach(btn => {
     btn.addEventListener("click", () => {
-      const { href, source } = btn.dataset;
-      chrome.storage.local.get([source], data => {
-        const updated = (data[source] || []).filter(i => i.href !== href);
-        chrome.storage.local.set({ [source]: updated }, init);
+      const { href, source: src } = btn.dataset;
+      chrome.storage.local.get([src], data => {
+        const updated = (data[src] || []).filter(i => i.href !== href);
+        chrome.storage.local.set({ [src]: updated }, init);
       });
     });
   });
+}
 
-  // Share button state
-  shareBtn.disabled = count < 5;
-  shareHint.style.display = count < 5 ? "block" : "none";
+// ── Render your list ──────────────────────────────────────────────────────────
+function renderYourList(netflix, prime) {
+  const count = netflix.length + prime.length;
+  totalCount.textContent = count;
+
+  renderYourSection(netflix, yourNetflixList, yourNetflixEmpty, "netflix");
+  renderYourSection(prime, yourPrimeList, yourPrimeEmpty, "prime");
+
+  if (count === 0) {
+    shareSection.style.display = "none";
+  } else {
+    shareSection.style.display = "block";
+    shareBtn.disabled = count < 5;
+    shareHint.style.display = count < 5 ? "block" : "none";
+  }
 }
 
 // ── Share ─────────────────────────────────────────────────────────────────────
@@ -104,7 +111,28 @@ copyBtn.addEventListener("click", () => {
   });
 });
 
-// ── Friend list ───────────────────────────────────────────────────────────────
+// ── Render a source section in Friend's Picks ─────────────────────────────────
+function renderFriendSection(items, listEl, emptyEl) {
+  const sorted = [...items].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+
+  if (sorted.length === 0) {
+    listEl.innerHTML = "";
+    emptyEl.style.display = "block";
+    return;
+  }
+
+  emptyEl.style.display = "none";
+  listEl.innerHTML = "";
+
+  sorted.forEach(item => {
+    const li = document.createElement("li");
+    li.className = "item";
+    li.innerHTML = `<span class="item-title">${item.title}</span>`;
+    listEl.appendChild(li);
+  });
+}
+
+// ── Render friend list ────────────────────────────────────────────────────────
 function renderFriendList(items, accessCount, hasOwnList) {
   friendSection.style.display = "block";
   divider.style.display       = "block";
@@ -112,30 +140,22 @@ function renderFriendList(items, accessCount, hasOwnList) {
   const showAll = hasOwnList && accessCount >= 1;
   const visible = showAll ? items : items.slice(0, 3);
 
-  friendList.innerHTML = "";
-  visible.forEach(item => {
-    const li = document.createElement("li");
-    li.className = "item";
-    li.innerHTML = `
-      <span class="dot ${item.source === 'netflix' ? 'dot-n' : 'dot-p'}"></span>
-      <span class="item-title">${item.title}</span>
-    `;
-    friendList.appendChild(li);
-  });
+  const netflix = visible.filter(i => i.source === "netflix");
+  const prime   = visible.filter(i => i.source === "prime");
 
-  if (!showAll) {
-    unlockMsg.style.display = "block";
-  }
+  renderFriendSection(netflix, friendNetflixList, friendNetflixEmpty);
+  renderFriendSection(prime, friendPrimeList, friendPrimeEmpty);
+
+  unlockMsg.style.display = showAll ? "none" : "block";
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function init() {
-  chrome.storage.local.get(["netflix", "prime", "sharedUrl", "friendUuid"], data => {
-    const netflix = data.netflix || [];
-    const prime   = data.prime   || [];
+  chrome.storage.local.get(["netflix", "prime", "sharedUrl", "sharedUuid", "friendUuid"], data => {
+    const netflix    = data.netflix || [];
+    const prime      = data.prime   || [];
     const hasOwnList = (netflix.length + prime.length) > 0;
 
-    // Restore shared state
     if (data.sharedUrl) {
       shareSection.style.display  = "block";
       shareBtnWrap.style.display  = "none";
@@ -146,8 +166,8 @@ function init() {
 
     renderYourList(netflix, prime);
 
-    // Load friend's list if uuid is pending
     if (data.friendUuid) {
+      if (data.friendUuid === data.sharedUuid) return;
       loadingFriend.style.display = "block";
       chrome.runtime.sendMessage({ type: "get_friend_list", uuid: data.friendUuid }, resp => {
         loadingFriend.style.display = "none";

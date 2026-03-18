@@ -1,3 +1,42 @@
+function setAdded(btn) {
+  btn.textContent = '✓ Added (click to remove)';
+  btn.style.cssText = `
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    background: #2ecc71;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+  `;
+  btn.disabled = false;
+  btn.dataset.added = "1";
+}
+
+function setNotAdded(btn) {
+  btn.textContent = 'Add to Nodisaar';
+  btn.style.cssText = `
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #e50914, #00a8e1);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+  `;
+  btn.dataset.added = "0";
+}
+
 function injectAddButtons() {
   const rows = document.querySelectorAll('li.retableRow[data-uia="activity-row"]');
   rows.forEach(row => {
@@ -15,37 +54,42 @@ function injectAddButtons() {
 
     reportCol.innerHTML = '';
     const btn = document.createElement('button');
-    btn.textContent = 'Add to Nodisaar favourites';
     btn.className = 'nodisaar-btn';
-    btn.style.cssText = `
-      background: #e50914; color: #fff; border: none;
-      padding: 4px 10px; border-radius: 4px; cursor: pointer;
-      font-size: 13px; font-family: inherit;
+     btn.style.cssText = `
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #e50914, #00a8e1);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
     `;
 
     btn.addEventListener('click', () => {
       chrome.storage.local.get(['netflix'], ({ netflix = [] }) => {
         const exists = netflix.some(i => i.href === href);
         if (!exists) {
-          netflix.push({ title, href, source: 'netflix' });
-          chrome.storage.local.set({ netflix }, () => {
-            btn.textContent = '✓ Added';
-            btn.style.background = '#2ecc71';
-            btn.disabled = true;
-          });
+          netflix.push({ title, href, source: 'netflix', addedAt: Date.now() });
+          chrome.storage.local.set({ netflix }, () => setAdded(btn));
         } else {
-          btn.textContent = '✓ Already added';
-          btn.disabled = true;
+          const updated = netflix.filter(i => i.href !== href);
+          chrome.storage.local.set({ netflix: updated }, () => setNotAdded(btn));
         }
       });
     });
 
-    // Mark if already saved
+    // Initial state
     chrome.storage.local.get(['netflix'], ({ netflix = [] }) => {
       if (netflix.some(i => i.href === href)) {
-        btn.textContent = '✓ Added';
-        btn.style.background = '#2ecc71';
-        btn.disabled = true;
+        setAdded(btn);
+      } else {
+        setNotAdded(btn);
       }
     });
 
@@ -53,7 +97,6 @@ function injectAddButtons() {
   });
 }
 
-// Netflix loads history dynamically
 const observer = new MutationObserver(injectAddButtons);
 observer.observe(document.body, { childList: true, subtree: true });
 injectAddButtons();

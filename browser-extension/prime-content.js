@@ -1,3 +1,17 @@
+function setAdded(btn) {
+  btn.textContent = '✓ Added (click to remove)';
+  btn.style.background = '#2ecc71';
+  btn.style.color = '#fff';
+  btn.dataset.added = "1";
+}
+
+function setNotAdded(btn) {
+  btn.textContent = 'Add to Nodisaar favourites';
+  btn.style.background = '#00a8e1';
+  btn.style.color = '#fff';
+  btn.dataset.added = "0";
+}
+
 function injectAddButtons() {
   const rows = document.querySelectorAll('li.avarm3[data-automation-id^="wh-item-"]');
   rows.forEach(row => {
@@ -5,17 +19,16 @@ function injectAddButtons() {
     row.dataset.nodisaarInjected = "1";
 
     const titleAnchor = row.querySelector('a._1NNx6V, a[href*="/detail/"]');
-    const deleteForm = row.querySelector('form[data-automation-id^="wh-delete-"]');
+    const deleteForm  = row.querySelector('form[data-automation-id^="wh-delete-"]');
     if (!titleAnchor || !deleteForm) return;
 
     const title = titleAnchor.textContent.trim();
-    const href = titleAnchor.getAttribute('href');
+    const href  = titleAnchor.getAttribute('href');
 
     const btn = document.createElement('button');
-    btn.textContent = 'Add to Nodisaar favourites';
     btn.type = 'button';
     btn.style.cssText = `
-      background: #00a8e1; color: #fff; border: none;
+      color: #fff; border: none;
       padding: 6px 12px; border-radius: 4px; cursor: pointer;
       font-size: 13px; font-family: inherit; margin-top: 6px;
     `;
@@ -24,24 +37,21 @@ function injectAddButtons() {
       chrome.storage.local.get(['prime'], ({ prime = [] }) => {
         const exists = prime.some(i => i.href === href);
         if (!exists) {
-          prime.push({ title, href, source: 'prime' });
-          chrome.storage.local.set({ prime }, () => {
-            btn.textContent = '✓ Added';
-            btn.style.background = '#2ecc71';
-            btn.disabled = true;
-          });
+          prime.push({ title, href, source: 'prime', addedAt: Date.now() });
+          chrome.storage.local.set({ prime }, () => setAdded(btn));
         } else {
-          btn.textContent = '✓ Already added';
-          btn.disabled = true;
+          const updated = prime.filter(i => i.href !== href);
+          chrome.storage.local.set({ prime: updated }, () => setNotAdded(btn));
         }
       });
     });
 
+    // Initial state
     chrome.storage.local.get(['prime'], ({ prime = [] }) => {
       if (prime.some(i => i.href === href)) {
-        btn.textContent = '✓ Added';
-        btn.style.background = '#2ecc71';
-        btn.disabled = true;
+        setAdded(btn);
+      } else {
+        setNotAdded(btn);
       }
     });
 
