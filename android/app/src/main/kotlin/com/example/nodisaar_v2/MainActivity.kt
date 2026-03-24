@@ -1,0 +1,5 @@
+package com.nodisaar.app
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

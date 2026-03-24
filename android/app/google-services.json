@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "903968291797",
+    "project_id": "nodi-saar",
+    "storage_bucket": "nodi-saar.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:903968291797:android:7b3c1f1e56df27f19b5b5c",
+        "android_client_info": {
+          "package_name": "com.nodisaar.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8ZqnQgJJLuiODs3c5vb8F6QMZlZxol8s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

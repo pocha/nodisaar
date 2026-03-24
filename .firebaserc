@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "nodi-saar"
+  },
+  "targets": {
+    "nodi-saar": {
+      "storage": {
+        "main": [
+          "nodi-saar.firebasestorage.app"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
