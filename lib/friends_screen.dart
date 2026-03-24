@@ -5,7 +5,8 @@ import 'firebase.dart';
 import 'models.dart';
 
 class FriendsScreen extends StatefulWidget {
-  const FriendsScreen({super.key});
+  final String? incomingFriend;
+  const FriendsScreen({super.key, this.incomingFriend});
 
   @override
   State<FriendsScreen> createState() => FriendsScreenState();
@@ -15,9 +16,16 @@ class FriendsScreenState extends State<FriendsScreen> {
   List<WatchItem> _items = [];
   bool _loading = false;
 
-  @override
+ @override
   void initState() {
     super.initState();
+    _init();
+  }
+
+  Future<void> _init() async {
+    if (widget.incomingFriend != null) {
+      await AppStorage.addFriendUsername(widget.incomingFriend!);
+    }
     _load();
   }
 

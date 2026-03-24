@@ -82,12 +82,15 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
       body: TabBarView(
-        controller: _tabController,
-        children: [
-          MyPicksScreen(key: _myPicksKey),
-          FriendsScreen(key: _friendsKey),
-        ],
-      ),
+    controller: _tabController,
+      children: [
+        MyPicksScreen(key: _myPicksKey),
+        FriendsScreen(
+          key: _friendsKey,
+          incomingFriend: widget.incomingFriendUsername,  // ← pass directly
+        ),
+      ],
+    ),
     );
   }
 }

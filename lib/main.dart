@@ -68,7 +68,10 @@ class _NodisaarAppState extends State<NodisaarApp> {
           secondary: Color(0xFFe50914),
         ),
       ),
-      home: HomeScreen(incomingFriendUsername: _incomingFriend),
+      home: HomeScreen(
+        key: ValueKey(_incomingFriend),  // ← add this
+        incomingFriendUsername: _incomingFriend,
+      ),
     );
   }
 }
