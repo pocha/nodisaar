@@ -283,17 +283,139 @@ class MyPicksScreenState extends State<MyPicksScreen> {
             const SizedBox(height: 16),
             _PlatformOption(
               label: 'Netflix',
+              iconAsset: 'assets/icon/netflix-logo.png',
               color: const Color(0xFFe50914),
               onTap: () { Navigator.pop(context); _openWebView('netflix'); },
             ),
             const Divider(height: 1, color: Color(0xFF2a2a33)),
             _PlatformOption(
               label: 'Prime Video',
+              iconAsset: 'assets/icon/prime-logo.png',
               color: const Color(0xFF00a8e1),
               onTap: () { Navigator.pop(context); _openWebView('prime'); },
             ),
+            const Divider(height: 1, color: Color(0xFF2a2a33)),
+            _PlatformOption(
+              label: 'Other',
+              icon: Icons.add_circle_outline,
+              color: const Color(0xFF7a7a8c),
+              onTap: () { Navigator.pop(context); _showManualAddSheet(); },
+            ),
             const SizedBox(height: 16),
           ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showManualAddSheet() async {
+    final nameCtrl = TextEditingController();
+    String? selectedSource;
+    final formKey = GlobalKey<FormState>();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF17171c),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setBS) => Padding(
+          padding: EdgeInsets.fromLTRB(
+              24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + 32),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Add a pick',
+                    style: TextStyle(fontFamily: 'Syne',
+                        fontWeight: FontWeight.w800, fontSize: 18, color: Colors.white)),
+                const SizedBox(height: 6),
+                const Text('Add a title from any platform manually.',
+                    style: TextStyle(color: Color(0xFF7a7a8c), fontSize: 13)),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: nameCtrl,
+                  autofocus: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Title',
+                    labelStyle: const TextStyle(color: Color(0xFF7a7a8c)),
+                    hintText: 'e.g. Succession',
+                    hintStyle: const TextStyle(color: Color(0xFF7a7a8c)),
+                    filled: true,
+                    fillColor: const Color(0xFF0e0e11),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF2a2a33))),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Enter a title' : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedSource,
+                  dropdownColor: const Color(0xFF17171c),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Platform',
+                    labelStyle: const TextStyle(color: Color(0xFF7a7a8c)),
+                    filled: true,
+                    fillColor: const Color(0xFF0e0e11),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF2a2a33))),
+                  ),
+                  items: _kOttSources.map((s) => DropdownMenuItem(
+                    value: s.id,
+                    child: Row(
+                      children: [
+                        _PlatformIcon(source: s.id, size: 24),
+                        const SizedBox(width: 10),
+                        Text(s.label,
+                            style: const TextStyle(color: Colors.white, fontSize: 14)),
+                      ],
+                    ),
+                  )).toList(),
+                  onChanged: (v) => setBS(() => selectedSource = v),
+                  validator: (v) => v == null ? 'Select a platform' : null,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00a8e1),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: () async {
+                      if (!formKey.currentState!.validate()) return;
+                      final title = nameCtrl.text.trim();
+                      final source = selectedSource!;
+                      final item = WatchItem(
+                        title: title,
+                        href: 'manual_${DateTime.now().millisecondsSinceEpoch}',
+                        source: source,
+                        viewedAt: DateTime.now(),
+                        addedAt: DateTime.now(),
+                      );
+                      await AppStorage.addItem(item);
+                      debugPrint('[Nodisaar] Manual item added: $title ($source)');
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      await _syncAndNotify();
+                    },
+                    child: const Text('Add to my picks',
+                        style: TextStyle(fontFamily: 'Syne',
+                            fontWeight: FontWeight.w700, fontSize: 14)),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -309,12 +431,100 @@ class MyPicksScreenState extends State<MyPicksScreen> {
             style: TextStyle(fontFamily: 'Syne',
                 fontWeight: FontWeight.w700, fontSize: 18, color: Colors.white)),
         SizedBox(height: 8),
-        Text('Tap + to add from Netflix or Prime watch history',
+        Text('Tap + to add from Netflix, Prime, or any platform',
             textAlign: TextAlign.center,
             style: TextStyle(color: Color(0xFF7a7a8c), fontSize: 13)),
       ],
     ),
   );
+}
+
+// ── OTT source catalogue ───────────────────────────────────────────────────────
+class _OttSource {
+  final String id;
+  final String label;
+  const _OttSource(this.id, this.label);
+}
+
+const _kOttSources = [
+  _OttSource('netflix',     'Netflix'),
+  _OttSource('prime',       'Prime Video'),
+  _OttSource('hotstar',     'Disney+ Hotstar'),
+  _OttSource('appletv',     'Apple TV+'),
+  _OttSource('max',         'Max'),
+  _OttSource('hulu',        'Hulu'),
+  _OttSource('sonyliv',     'SonyLIV'),
+  _OttSource('zee5',        'Zee5'),
+  _OttSource('jiocinema',   'JioCinema'),
+  _OttSource('crunchyroll', 'Crunchyroll'),
+  _OttSource('paramount',   'Paramount+'),
+  _OttSource('mxplayer',    'MX Player'),
+  _OttSource('youtube',     'YouTube Premium'),
+  _OttSource('discovery',   'Discovery+'),
+];
+
+String? _assetForSource(String source) {
+  const map = {
+    'netflix':     'assets/icon/netflix-logo.png',
+    'prime':       'assets/icon/prime-logo.png',
+    'hotstar':     'assets/icon/hotstar-logo.png',
+    'appletv':     'assets/icon/appletv-logo.png',
+    'max':         'assets/icon/max-logo.png',
+    'hulu':        'assets/icon/hulu-logo.png',
+    'sonyliv':     'assets/icon/sonyliv-logo.png',
+    'zee5':        'assets/icon/zee5-logo.png',
+    'jiocinema':   'assets/icon/jiocinema-logo.png',
+    'crunchyroll': 'assets/icon/crunchyroll-logo.png',
+    'paramount':   'assets/icon/paramount-logo.png',
+    'mxplayer':    'assets/icon/mxplayer-logo.png',
+    'youtube':     'assets/icon/youtube-logo.png',
+    'discovery':   'assets/icon/discovery-logo.png',
+  };
+  return map[source];
+}
+
+Color _colorForSource(String source) {
+  const map = {
+    'netflix':     Color(0xFFe50914),
+    'prime':       Color(0xFF00a8e1),
+    'hotstar':     Color(0xFF0f62ac),
+    'appletv':     Color(0xFF555555),
+    'max':         Color(0xFF002be7),
+    'hulu':        Color(0xFF1ce783),
+    'sonyliv':     Color(0xFF0033ff),
+    'zee5':        Color(0xFF7b2d8b),
+    'jiocinema':   Color(0xFF5433ff),
+    'crunchyroll': Color(0xFFf47521),
+    'paramount':   Color(0xFF0064ff),
+    'mxplayer':    Color(0xFF00c3ff),
+    'youtube':     Color(0xFFff0000),
+    'discovery':   Color(0xFF0077c8),
+  };
+  return map[source] ?? const Color(0xFF7a7a8c);
+}
+
+// ── Platform icon widget ───────────────────────────────────────────────────────
+class _PlatformIcon extends StatelessWidget {
+  final String source;
+  final double size;
+  const _PlatformIcon({required this.source, this.size = 36});
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = _assetForSource(source);
+    final color = _colorForSource(source);
+    return Container(
+      width: size, height: size,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(size * 0.22),
+      ),
+      padding: EdgeInsets.all(size * 0.08),
+      child: asset != null
+          ? Image.asset(asset, fit: BoxFit.contain)
+          : Icon(Icons.tv, color: color, size: size * 0.6),
+    );
+  }
 }
 
 // ── Item tile ──────────────────────────────────────────────────────────────────
@@ -325,7 +535,6 @@ class _ItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isNetflix = item.source == 'netflix';
     final dateStr = DateFormat('d MMM yyyy').format(item.viewedAt);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -334,25 +543,8 @@ class _ItemTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Platform indicator
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: isNetflix
-                  ? const Color(0xFFe50914).withOpacity(0.15)
-                  : const Color(0xFF00a8e1).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(3),
-              child: Image.asset(
-                isNetflix ? 'assets/icon/netflix-logo.png' : 'assets/icon/prime-logo.png',
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
+          _PlatformIcon(source: item.source),
           const SizedBox(width: 12),
-          // Title + date
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,7 +560,6 @@ class _ItemTile extends StatelessWidget {
               ],
             ),
           ),
-          // Remove
           GestureDetector(
             onTap: onRemove,
             child: const Padding(
@@ -383,28 +574,37 @@ class _ItemTile extends StatelessWidget {
   }
 }
 
+// ── Platform option row (in add sheet) ────────────────────────────────────────
 class _PlatformOption extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
-  const _PlatformOption({required this.label, required this.color, required this.onTap});
+  final String? iconAsset;
+  final IconData? icon;
+  const _PlatformOption({
+    required this.label,
+    required this.color,
+    required this.onTap,
+    this.iconAsset,
+    this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final asset = label == 'Netflix'
-        ? 'assets/icon/netflix-logo.png'
-        : 'assets/icon/prime-logo.png';
+    Widget leading = Container(
+      width: 40, height: 40,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.all(6),
+      child: iconAsset != null
+          ? Image.asset(iconAsset!, fit: BoxFit.contain)
+          : Icon(icon ?? Icons.add, color: color, size: 22),
+    );
     return ListTile(
       onTap: onTap,
-      leading: Container(
-        width: 40, height: 40,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: const EdgeInsets.all(6),
-        child: Image.asset(asset, fit: BoxFit.contain),
-      ),
+      leading: leading,
       title: Text(label,
           style: const TextStyle(color: Colors.white,
               fontFamily: 'Syne', fontWeight: FontWeight.w600)),
