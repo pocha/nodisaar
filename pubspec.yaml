@@ -40,3 +40,14 @@ flutter:
   assets:
     - assets/icon/netflix-logo.png
     - assets/icon/prime-logo.png
+    - assets/icon/jiohotstar-logo.png
+    - assets/icon/appletv-logo.png
+    - assets/icon/max-logo.png
+    - assets/icon/sonyliv-logo.png
+    - assets/icon/zee5-logo.png
+    - assets/icon/hulu-logo.png
+    - assets/icon/crunchyroll-logo.png
+    - assets/icon/paramount-logo.png
+    - assets/icon/mxplayer-logo.png
+    - assets/icon/youtube-logo.png
+    - assets/icon/discovery-logo.png
