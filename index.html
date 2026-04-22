@@ -61,12 +61,18 @@
 
     /* ── Hero ── */
     .hero {
-      max-width: 680px; margin: 0 auto; text-align: center;
+      max-width: 860px; margin: 0 auto; padding: 60px 32px 64px;
+      display: flex; align-items: center; gap: 40px;
     }
+    .hero-video { flex-shrink: 0; }
+    .hero-video iframe {
+      width: 200px; height: 356px; border-radius: 12px; border: none; display: block;
+    }
+    .hero-text { flex: 1; }
     .hero-eyebrow {
       display: inline-flex; align-items: center; gap: 6px;
       font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 24px;
+      color: var(--muted); margin-bottom: 20px;
     }
     .hero-eyebrow .dot {
       width: 6px; height: 6px; border-radius: 50%;
@@ -76,15 +82,15 @@
 
     .hero h1 {
       font-family: 'Syne', sans-serif; font-weight: 800;
-      font-size: clamp(36px, 6vw, 58px); letter-spacing: -1.5px; line-height: 1.05;
-      margin-bottom: 20px;
+      font-size: clamp(24px, 3.5vw, 36px); letter-spacing: -1px; line-height: 1.1;
+      margin-bottom: 16px;
     }
     .hero h1 .grad {
       background: linear-gradient(135deg, var(--accent-n) 0%, var(--accent-p) 100%);
       -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
     }
-    .hero p { font-size: 17px; color: #8888a0; max-width: 480px; margin: 0 auto 36px; line-height: 1.7; }
-    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero p { font-size: 14px; color: #8888a0; margin-bottom: 28px; line-height: 1.7; }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
     /* ── Buttons ── */
     .btn-primary {
@@ -216,7 +222,8 @@
 
     @media(max-width:600px){
       nav { padding: 16px 20px; }
-      .hero { padding: 60px 20px 48px; }
+      .hero { flex-direction: column; padding: 40px 20px 48px; gap: 28px; }
+      .hero-video iframe { width: 100%; height: 56vw; max-height: 320px; }
       .section { padding: 0 20px 60px; }
       .modal { padding: 24px 18px 40px; border-radius: 16px 16px 0 0; }
     }
@@ -233,11 +240,18 @@
   <!-- ── Main view (home + user profile) ── -->
   <div id="view-main" style="display:none">
     <div class="hero">
-      <div class="hero-eyebrow"><span class="dot"></span>Community watchlist</div>
-      <h1>Share your <span class="grad">OTT favourites</span><br>with friends</h1>
-      <p id="hero-sub">Curate picks from your Netflix &amp; Prime watch history. See what your friends have been watching.</p>
-      <div class="hero-actions" id="hero-actions">
-        <button class="btn-primary" onclick="openInstall()">↓ &nbsp;Install the App</button>
+      <div class="hero-video">
+        <iframe src="https://www.youtube.com/embed/Bc3266-UcKM"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+      </div>
+      <div class="hero-text">
+        <div class="hero-eyebrow"><span class="dot"></span>Community watchlist</div>
+        <h1>Share your <span class="grad">OTT favourites</span><br>with friends</h1>
+        <p id="hero-sub">Curate picks from your Netflix &amp; Prime watch history. See what your friends have been watching.</p>
+        <div class="hero-actions" id="hero-actions">
+          <button class="btn-primary" onclick="openInstall()">↓ &nbsp;Install the App</button>
+        </div>
       </div>
     </div>
 
