@@ -447,19 +447,19 @@ class _OttSource {
 }
 
 const _kOttSources = [
-  _OttSource('netflix',     'Netflix'),
-  _OttSource('prime',       'Prime Video'),
-  _OttSource('jiohotstar',  'JioHotstar'),
   _OttSource('appletv',     'Apple TV+'),
-  _OttSource('max',         'Max'),
-  _OttSource('hulu',        'Hulu'),
-  _OttSource('sonyliv',     'SonyLIV'),
-  _OttSource('zee5',        'Zee5'),
   _OttSource('crunchyroll', 'Crunchyroll'),
-  _OttSource('paramount',   'Paramount+'),
-  _OttSource('mxplayer',    'MX Player'),
-  _OttSource('youtube',     'YouTube Premium'),
   _OttSource('discovery',   'Discovery+'),
+  _OttSource('hulu',        'Hulu'),
+  _OttSource('jiohotstar',  'JioHotstar'),
+  _OttSource('max',         'Max'),
+  _OttSource('mxplayer',    'MX Player'),
+  _OttSource('netflix',     'Netflix'),
+  _OttSource('paramount',   'Paramount+'),
+  _OttSource('prime',       'Prime Video'),
+  _OttSource('sonyliv',     'SonyLIV'),
+  _OttSource('youtube',     'YouTube Premium'),
+  _OttSource('zee5',        'Zee5'),
 ];
 
 String? _assetForSource(String source) {
