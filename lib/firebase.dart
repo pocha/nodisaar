@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'models.dart';
@@ -15,6 +16,7 @@ class FirebaseService {
   static Future<String> ensureAuth() async {
     if (_auth.currentUser == null) {
       await _auth.signInAnonymously();
+      debugPrint('[Nodisaar] Signed in anonymously — uid: ${_auth.currentUser?.uid}');
     }
     return _auth.currentUser!.uid;
   }
@@ -35,21 +37,28 @@ class FirebaseService {
       });
       docId = ref.id;
       await AppStorage.setDocId(docId);
+      debugPrint('[Nodisaar] User doc created — docId: $docId, uid: $uid');
+    } else {
+      debugPrint('[Nodisaar] User doc exists — docId: $docId');
     }
     return docId;
   }
 
   // ── Username check (HTTP — safe public query) ──────────────────────────────
   static Future<bool> checkUsername(String username) async {
+    debugPrint('[Nodisaar] Checking username availability: $username');
     final uri = Uri.parse(
         '$_base/checkUsername?username=${Uri.encodeComponent(username)}');
     final resp = await http.get(uri);
     if (resp.statusCode != 200) return false;
-    return jsonDecode(resp.body)['available'] == true;
+    final available = jsonDecode(resp.body)['available'] == true;
+    debugPrint('[Nodisaar] Username "$username" available: $available');
+    return available;
   }
 
   // ── Follow a friend via Cloud Function ────────────────────────────────────
   static Future<List<WatchItem>> followUser(String targetUsername) async {
+    debugPrint('[Nodisaar] Following user: $targetUsername');
     final myDocId = await ensureUserDoc();
     final token = await _auth.currentUser!.getIdToken();
 
@@ -62,6 +71,7 @@ class FirebaseService {
       body: jsonEncode({'myDocId': myDocId, 'targetUsername': targetUsername}),
     );
 
+    debugPrint('[Nodisaar] followUser response: ${resp.statusCode}');
     if (resp.statusCode != 200) return [];
 
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
@@ -75,32 +85,40 @@ class FirebaseService {
 
     await AppStorage.addFriendUsername(targetUsername);
     await AppStorage.setFriendItems(targetUsername, items);
+    debugPrint('[Nodisaar] Now following $targetUsername — ${items.length} existing item(s) stored');
     return items;
   }
 
   // ── Save username to Firestore user doc ───────────────────────────────────
   static Future<void> saveUsername(String username) async {
+    debugPrint('[Nodisaar] Saving username to Firestore: $username');
     final docId = await ensureUserDoc();
     await _db.collection('Users').doc(docId).set(
       {'username': username},
       SetOptions(merge: true),
     );
+    debugPrint('[Nodisaar] Username saved — docId: $docId, username: $username');
   }
 
   // ── Save FCM token to Firestore ────────────────────────────────────────────
   static Future<void> saveFcmToken(String token) async {
     final docId = await AppStorage.getDocId();
-    if (docId == null) return;
+    if (docId == null) {
+      debugPrint('[Nodisaar] saveFcmToken: no docId yet, skipping');
+      return;
+    }
     await _db.collection('Users').doc(docId).update({'fcmToken': token});
+    debugPrint('[Nodisaar] FCM token saved to Firestore — ${token.substring(0, 20)}…');
   }
 
   // ── Notify followers via Cloud Function (fire-and-forget) ─────────────────
   static Future<void> notifyFollowers(List<WatchItem> newItems) async {
     final docId = await AppStorage.getDocId();
     if (docId == null || newItems.isEmpty) return;
+    debugPrint('[Nodisaar] Calling notifyFollowers with ${newItems.length} new item(s): ${newItems.map((i) => i.title).join(', ')}');
     try {
       final token = await _auth.currentUser!.getIdToken();
-      await http.post(
+      final resp = await http.post(
         Uri.parse('$_base/notifyFollowers'),
         headers: {
           'Content-Type': 'application/json',
@@ -111,11 +129,15 @@ class FirebaseService {
           'items': newItems.map((i) => i.toFirestore()).toList(),
         }),
       );
-    } catch (_) {}
+      debugPrint('[Nodisaar] notifyFollowers response: ${resp.statusCode} — body: ${resp.body}');
+    } catch (e) {
+      debugPrint('[Nodisaar] notifyFollowers failed: $e');
+    }
   }
 
   // ── Save own list to Firestore — returns newly added items ─────────────────
   static Future<List<WatchItem>> syncItems(List<WatchItem> localItems) async {
+    debugPrint('[Nodisaar] syncItems — ${localItems.length} local item(s)');
     final docId = await ensureUserDoc();
     final username = await AppStorage.getUsername();
 
@@ -135,7 +157,12 @@ class FirebaseService {
     final toAdd    = localItems.where((i) => !remoteIds.contains(i.id)).toList();
     final toDelete = remoteIds.difference(localIds);
 
-    if (toAdd.isEmpty && toDelete.isEmpty) return [];
+    debugPrint('[Nodisaar] syncItems — ${toAdd.length} to add, ${toDelete.length} to delete');
+
+    if (toAdd.isEmpty && toDelete.isEmpty) {
+      debugPrint('[Nodisaar] syncItems — nothing to sync');
+      return [];
+    }
 
     const chunkSize = 400;
     final allOps = <Future>[];
@@ -161,6 +188,7 @@ class FirebaseService {
     }
 
     await Future.wait(allOps);
+    debugPrint('[Nodisaar] syncItems — wrote ${toAdd.length} new item(s) to Firestore: ${toAdd.map((i) => i.title).join(', ')}');
     return toAdd;
   }
 

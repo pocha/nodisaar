@@ -12,6 +12,7 @@ import 'models.dart';
 @pragma('vm:entry-point')
 Future<void> _bgMessageHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  debugPrint('[Nodisaar] FCM background/terminated message received — type: ${message.data['type']}, from: ${message.data['fromUsername']}');
   await _storeFriendPicks(message);
 }
 
@@ -19,18 +20,23 @@ Future<void> _storeFriendPicks(RemoteMessage message) async {
   if (message.data['type'] != 'friend_picks') return;
   final fromUsername = message.data['fromUsername'] as String?;
   final itemsJson    = message.data['items'] as String?;
-  if (fromUsername == null || itemsJson == null) return;
+  if (fromUsername == null || itemsJson == null) {
+    debugPrint('[Nodisaar] FCM friend_picks message missing fromUsername or items');
+    return;
+  }
   final items = (jsonDecode(itemsJson) as List)
       .map((m) => WatchItem.fromMap(Map<String, dynamic>.from(m),
             friendUsername: fromUsername))
       .toList();
   await AppStorage.appendFriendItems(fromUsername, items);
+  debugPrint('[Nodisaar] Stored ${items.length} FCM pick(s) from $fromUsername into local storage');
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await FirebaseAuth.instance.signInAnonymously();
+  debugPrint('[Nodisaar] Signed in anonymously — uid: ${FirebaseAuth.instance.currentUser?.uid}');
   FirebaseMessaging.onBackgroundMessage(_bgMessageHandler);
   runApp(const NodisaarApp());
 }
@@ -56,6 +62,7 @@ class _NodisaarAppState extends State<NodisaarApp> {
   Future<void> _initDeepLinks() async {
     _appLinks.uriLinkStream.listen((uri) {
       final username = _extractUsername(uri);
+      debugPrint('[Nodisaar] Deep link received (stream): $uri → username: $username');
       if (username != null && mounted) {
         setState(() => _incomingFriend = username);
       }
@@ -64,6 +71,7 @@ class _NodisaarAppState extends State<NodisaarApp> {
     final initial = await _appLinks.getInitialLink();
     if (initial != null) {
       final username = _extractUsername(initial);
+      debugPrint('[Nodisaar] Deep link received (initial): $initial → username: $username');
       if (username != null) setState(() => _incomingFriend = username);
     }
   }
@@ -71,12 +79,14 @@ class _NodisaarAppState extends State<NodisaarApp> {
   Future<void> _initFcm() async {
     // Foreground: store picks silently, refresh Friends tab
     FirebaseMessaging.onMessage.listen((msg) async {
+      debugPrint('[Nodisaar] FCM foreground message — type: ${msg.data['type']}, from: ${msg.data['fromUsername']}');
       await _storeFriendPicks(msg);
       HomeScreen.friendsTabNotifier.notifyListeners();
     });
 
     // Notification tap while app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((msg) {
+      debugPrint('[Nodisaar] FCM notification tapped (background) — type: ${msg.data['type']}');
       if (msg.data['type'] == 'friend_picks') {
         HomeScreen.goFriendsTab();
       }
@@ -84,14 +94,16 @@ class _NodisaarAppState extends State<NodisaarApp> {
 
     // Notification tap from terminated state
     final initial = await FirebaseMessaging.instance.getInitialMessage();
-    if (initial?.data['type'] == 'friend_picks') {
-      HomeScreen.goFriendsTab();
+    if (initial != null) {
+      debugPrint('[Nodisaar] FCM notification tapped (terminated) — type: ${initial.data['type']}');
+      if (initial.data['type'] == 'friend_picks') {
+        HomeScreen.goFriendsTab();
+      }
     }
 
     // Keep FCM token fresh
     FirebaseMessaging.instance.onTokenRefresh.listen((token) {
-      // ignore if no user doc yet — saveFcmToken is a no-op when docId is null
-      // (token will be saved after permission dialog)
+      debugPrint('[Nodisaar] FCM token refreshed: ${token.substring(0, 20)}…');
     });
   }
 

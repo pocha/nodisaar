@@ -130,11 +130,16 @@ class MyPicksScreenState extends State<MyPicksScreen> {
       final entered = await _showUsernameSheet();
       if (entered == null) return;
       username = entered;
+      debugPrint('[Nodisaar] Username set by user: $username');
       FirebaseService.saveUsername(username); // push username to Firestore (fire-and-forget)
     }
     final docId = await AppStorage.getDocId();
-    if (docId == null) return;
+    if (docId == null) {
+      debugPrint('[Nodisaar] shareList: no docId, cannot share');
+      return;
+    }
     final url = 'https://nodi-saar.github.io/user/$username/$docId';
+    debugPrint('[Nodisaar] Sharing URL: $url');
     await Share.share(
       'Check out my OTT favourites on Nodisaar! 🍿\n$url\n\n'
       'Install the app to see my full list & add your own picks.',
