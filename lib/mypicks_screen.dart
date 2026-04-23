@@ -5,6 +5,7 @@ import 'storage.dart';
 import 'firebase.dart';
 import 'models.dart';
 import 'webview_screen.dart';
+import 'webview_disclaimer_screen.dart';
 import 'platform_badge.dart';
 import 'title_search_screen.dart';
 
@@ -32,6 +33,16 @@ class MyPicksScreenState extends State<MyPicksScreen> {
   }
 
   Future<void> _openWebView(String platform) async {
+    if (!await AppStorage.getWebViewDisclaimerOk()) {
+      if (!mounted) return;
+      final proceed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+            builder: (_) => WebViewDisclaimerScreen(platform: platform)),
+      );
+      if (proceed != true) return;
+    }
+    if (!mounted) return;
     final result = await Navigator.push<WebViewResult>(
       context,
       MaterialPageRoute(builder: (_) => WebViewScreen(platform: platform)),

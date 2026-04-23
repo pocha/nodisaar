@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'storage.dart';
@@ -53,7 +54,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
         backgroundColor: const Color(0xFF0e0e11),
         foregroundColor: Colors.white,
         title: Text(
-          widget.platform == 'netflix' ? 'Netflix History' : 'Prime History',
+          widget.platform == 'netflix' ? 'Netflix Watch History' : 'Prime Watch History',
           style: const TextStyle(fontFamily: 'Syne', fontWeight: FontWeight.w700),
         ),
         actions: [
@@ -78,9 +79,13 @@ class _WebViewScreenState extends State<WebViewScreen> {
               domStorageEnabled: true,
               databaseEnabled: true,
               javaScriptEnabled: true,
-              userAgent:
-                  'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 '
-                  'Chrome/120 Mobile Safari/537.36',
+              userAgent: Platform.isIOS
+                  ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) '
+                    'AppleWebKit/605.1.15 (KHTML, like Gecko) '
+                    'Version/17.0 Mobile/15E148 Safari/604.1'
+                  : 'Mozilla/5.0 (Linux; Android 10; K) '
+                    'AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/120.0.0.0 Mobile Safari/537.36',
             ),
             onWebViewCreated: (ctrl) {
               _ctrl = ctrl;

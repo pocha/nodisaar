@@ -3,10 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models.dart';
 
 class AppStorage {
-  static const _keyItems    = 'watchItems';
-  static const _keyUsername = 'username';
-  static const _keyDocId    = 'userDocId';
-  static const _keyFriends  = 'friendUsernames'; // List<String>
+  static const _keyItems               = 'watchItems';
+  static const _keyUsername            = 'username';
+  static const _keyDocId               = 'userDocId';
+  static const _keyFriends             = 'friendUsernames'; // List<String>
+  static const _keyWebViewDisclaimerOk = 'webview_disclaimer_ok';
 
   // ── Watch items (own) ──────────────────────────────────────────────────────
   static Future<List<WatchItem>> getItems() async {
@@ -105,5 +106,16 @@ class AppStorage {
       all.addAll(await getFriendItems(u));
     }
     return all;
+  }
+
+  // ── WebView disclaimer preference ──────────────────────────────────────────
+  static Future<bool> getWebViewDisclaimerOk() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyWebViewDisclaimerOk) ?? false;
+  }
+
+  static Future<void> setWebViewDisclaimerOk() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyWebViewDisclaimerOk, true);
   }
 }
