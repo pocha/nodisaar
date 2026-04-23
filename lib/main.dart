@@ -119,10 +119,12 @@ class _NodisaarAppState extends State<NodisaarApp> {
       HomeScreen.friendsTabNotifier.notifyListeners();
     });
 
-    FirebaseMessaging.onMessageOpenedApp.listen((msg) {
+    FirebaseMessaging.onMessageOpenedApp.listen((msg) async {
       debugPrint('[Nodisaar] FCM notification tapped (background) — type: ${msg.data['type']}');
       if (msg.data['type'] == 'friend_picks') {
-        HomeScreen.goFriendsTab();
+        await _storeFriendPicks(msg);
+        if (mounted) setState(() => _pendingFriendsTab = true);
+        HomeScreen.goFriendsTab(); // fallback if HomeScreen is already mounted
       }
     });
 

@@ -38,6 +38,9 @@ if $BUILD_ANDROID; then
 
   echo "Updating index.html with new APK link..."
   sed -i '' "s|const ANDROID_LINK.*|const ANDROID_LINK    = '${PUBLIC_URL}';|" index.html
+
+  echo "Deploying web to Firebase Hosting..."
+  firebase deploy --only hosting
 fi
 
 if $BUILD_IOS; then
@@ -51,8 +54,5 @@ if $BUILD_IOS; then
     --apiKey $ASC_KEY_ID \
     --apiIssuer $ASC_ISSUER_ID
 fi
-
-echo "Deploying web to Firebase Hosting..."
-firebase deploy --only hosting
 
 echo "Done! 🚀 Version ${VERSION} deployed."
