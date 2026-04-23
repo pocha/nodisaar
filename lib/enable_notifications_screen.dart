@@ -82,9 +82,9 @@ class _EnableNotificationsScreenState
 
                 // Body
                 const Text(
-                  "You're following friends on Nodisaar. "
+                  "All the new favourites of your friends are sent via Notifications "
                   "Notifications are the only way to know when they add new picks — "
-                  "without them, you'll miss every update.",
+                  "without them, you'll miss them as there is no refresh button",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Color(0xFF7a7a8c),

@@ -69,14 +69,23 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _handleIncomingFriend(String username) async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Switch to Friends tab and wait one frame for it to build
       _tabController.animateTo(1);
+      await WidgetsBinding.instance.endOfFrame;
+
+      // Step 1: show any already-cached items
+      await _friendsKey.currentState?.reload();
+
+      // Step 2: fetch friend's picks from server
       _friendsKey.currentState?.startLoading("Fetching friend's favourites…");
       await FirebaseService.followUser(username);
-      _friendsKey.currentState?.reload();
+
+      // Step 3: reload with the newly stored items
+      await _friendsKey.currentState?.reload();
 
       if (!mounted) return;
 
-      // Gate: if notifications not authorised, push blocking screen
+      // Step 4: notification gate
       final settings =
           await FirebaseMessaging.instance.getNotificationSettings();
       final authorized =
