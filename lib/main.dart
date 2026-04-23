@@ -113,6 +113,12 @@ class _NodisaarAppState extends State<NodisaarApp> {
   }
 
   Future<void> _initFcm() async {
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
     FirebaseMessaging.onMessage.listen((msg) async {
       debugPrint('[Nodisaar] FCM foreground message — type: ${msg.data['type']}, from: ${msg.data['fromUsername']}');
       await _storeFriendPicks(msg);

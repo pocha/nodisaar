@@ -102,13 +102,13 @@ class FirebaseService {
 
   // ── Save FCM token to Firestore ────────────────────────────────────────────
   static Future<void> saveFcmToken(String token) async {
-    final docId = await AppStorage.getDocId();
-    if (docId == null) {
-      debugPrint('[Nodisaar] saveFcmToken: no docId yet, skipping');
-      return;
+    try {
+      final docId = await ensureUserDoc(); // creates doc if this is a fresh install
+      await _db.collection('Users').doc(docId).update({'fcmToken': token});
+      debugPrint('[Nodisaar] FCM token saved to Firestore — ${token.substring(0, 20)}…');
+    } catch (e) {
+      debugPrint('[Nodisaar] saveFcmToken failed: $e');
     }
-    await _db.collection('Users').doc(docId).update({'fcmToken': token});
-    debugPrint('[Nodisaar] FCM token saved to Firestore — ${token.substring(0, 20)}…');
   }
 
   // ── Notify followers via Cloud Function (fire-and-forget) ─────────────────
