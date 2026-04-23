@@ -5,6 +5,8 @@ import 'storage.dart';
 import 'firebase.dart';
 import 'models.dart';
 import 'webview_screen.dart';
+import 'platform_badge.dart';
+import 'title_search_screen.dart';
 
 class MyPicksScreen extends StatefulWidget {
   const MyPicksScreen({super.key});
@@ -336,23 +338,45 @@ class MyPicksScreenState extends State<MyPicksScreen> {
                 const Text('Add a title from any platform manually.',
                     style: TextStyle(color: Color(0xFF7a7a8c), fontSize: 13)),
                 const SizedBox(height: 20),
-                TextFormField(
-                  controller: nameCtrl,
-                  autofocus: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Title',
-                    labelStyle: const TextStyle(color: Color(0xFF7a7a8c)),
-                    hintText: 'e.g. Succession',
-                    hintStyle: const TextStyle(color: Color(0xFF7a7a8c)),
-                    filled: true,
-                    fillColor: const Color(0xFF0e0e11),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF2a2a33))),
+                GestureDetector(
+                  onTap: () async {
+                    final result = await Navigator.push<TitleSearchResult>(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const TitleSearchScreen()),
+                    );
+                    if (result != null) {
+                      nameCtrl.text = result.title;
+                      setBS(() {
+                        if (result.source.isNotEmpty) {
+                          selectedSource = result.source;
+                        }
+                      });
+                    }
+                  },
+                  child: AbsorbPointer(
+                    child: TextFormField(
+                      controller: nameCtrl,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Title',
+                        labelStyle: const TextStyle(color: Color(0xFF7a7a8c)),
+                        hintText: 'Tap to search titles',
+                        hintStyle: const TextStyle(color: Color(0xFF7a7a8c)),
+                        filled: true,
+                        fillColor: const Color(0xFF0e0e11),
+                        suffixIcon: const Icon(Icons.search,
+                            color: Color(0xFF7a7a8c)),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF2a2a33))),
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Tap to search and select a title'
+                          : null,
+                    ),
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Enter a title' : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
@@ -372,7 +396,7 @@ class MyPicksScreenState extends State<MyPicksScreen> {
                     value: s.id,
                     child: Row(
                       children: [
-                        _PlatformIcon(source: s.id, size: 24),
+                        PlatformIcon(source: s.id, size: 24),
                         const SizedBox(width: 10),
                         Text(s.label,
                             style: const TextStyle(color: Colors.white, fontSize: 14)),
@@ -462,68 +486,6 @@ const _kOttSources = [
   _OttSource('zee5',        'Zee5'),
 ];
 
-String? _assetForSource(String source) {
-  const map = {
-    'netflix':     'assets/icon/netflix-logo.png',
-    'prime':       'assets/icon/prime-logo.png',
-    'jiohotstar':  'assets/icon/jiohotstar-logo.png',
-    'appletv':     'assets/icon/appletv-logo.png',
-    'max':         'assets/icon/max-logo.png',
-    'hulu':        'assets/icon/hulu-logo.png',
-    'sonyliv':     'assets/icon/sonyliv-logo.png',
-    'zee5':        'assets/icon/zee5-logo.png',
-    'crunchyroll': 'assets/icon/crunchyroll-logo.png',
-    'paramount':   'assets/icon/paramount-logo.png',
-    'mxplayer':    'assets/icon/mxplayer-logo.png',
-    'youtube':     'assets/icon/youtube-logo.png',
-    'discovery':   'assets/icon/discovery-logo.png',
-  };
-  return map[source];
-}
-
-Color _colorForSource(String source) {
-  const map = {
-    'netflix':     Color(0xFFe50914),
-    'prime':       Color(0xFF00a8e1),
-    'jiohotstar':  Color(0xFF0f62ac),
-    'appletv':     Color(0xFF555555),
-    'max':         Color(0xFF002be7),
-    'hulu':        Color(0xFF1ce783),
-    'sonyliv':     Color(0xFF0033ff),
-    'zee5':        Color(0xFF7b2d8b),
-    'crunchyroll': Color(0xFFf47521),
-    'paramount':   Color(0xFF0064ff),
-    'mxplayer':    Color(0xFF00c3ff),
-    'youtube':     Color(0xFFff0000),
-    'discovery':   Color(0xFF0077c8),
-  };
-  return map[source] ?? const Color(0xFF7a7a8c);
-}
-
-// ── Platform icon widget ───────────────────────────────────────────────────────
-class _PlatformIcon extends StatelessWidget {
-  final String source;
-  final double size;
-  const _PlatformIcon({required this.source, this.size = 36});
-
-  @override
-  Widget build(BuildContext context) {
-    final asset = _assetForSource(source);
-    final color = _colorForSource(source);
-    return Container(
-      width: size, height: size,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(size * 0.22),
-      ),
-      padding: EdgeInsets.all(size * 0.08),
-      child: asset != null
-          ? Image.asset(asset, fit: BoxFit.contain)
-          : Icon(Icons.tv, color: color, size: size * 0.6),
-    );
-  }
-}
-
 // ── Item tile ──────────────────────────────────────────────────────────────────
 class _ItemTile extends StatelessWidget {
   final WatchItem item;
@@ -540,7 +502,7 @@ class _ItemTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _PlatformIcon(source: item.source),
+          PlatformIcon(source: item.source),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -591,7 +553,7 @@ class _PlatformOption extends StatelessWidget {
     Widget leading = Container(
       width: 40, height: 40,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(6),

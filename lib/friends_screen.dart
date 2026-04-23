@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'storage.dart';
 import 'models.dart';
+import 'platform_badge.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});
@@ -38,10 +39,10 @@ class FriendsScreenState extends State<FriendsScreen> {
   List<_MergedItem> _merge(List<WatchItem> items) {
     final map = <String, _MergedItem>{};
     for (final item in items) {
-      if (!map.containsKey(item.href)) {
-        map[item.href] = _MergedItem(item);
+      if (!map.containsKey(item.id)) {
+        map[item.id] = _MergedItem(item);
       } else {
-        map[item.href]!.merge(item);
+        map[item.id]!.merge(item);
       }
     }
     return map.values.toList()
@@ -133,48 +134,8 @@ class _FriendItemTile extends StatelessWidget {
   final _MergedItem item;
   const _FriendItemTile({required this.item});
 
-  static Color _colorForSource(String source) {
-    const map = {
-      'netflix':     Color(0xFFe50914),
-      'prime':       Color(0xFF00a8e1),
-      'jiohotstar':  Color(0xFF0f62ac),
-      'appletv':     Color(0xFF555555),
-      'max':         Color(0xFF002be7),
-      'hulu':        Color(0xFF1ce783),
-      'sonyliv':     Color(0xFF0033ff),
-      'zee5':        Color(0xFF7b2d8b),
-      'crunchyroll': Color(0xFFf47521),
-      'paramount':   Color(0xFF0064ff),
-      'mxplayer':    Color(0xFF00c3ff),
-      'youtube':     Color(0xFFff0000),
-      'discovery':   Color(0xFF0077c8),
-    };
-    return map[source] ?? const Color(0xFF7a7a8c);
-  }
-
-  static String? _assetForSource(String source) {
-    const map = {
-      'netflix':     'assets/icon/netflix-logo.png',
-      'prime':       'assets/icon/prime-logo.png',
-      'jiohotstar':  'assets/icon/jiohotstar-logo.png',
-      'appletv':     'assets/icon/appletv-logo.png',
-      'max':         'assets/icon/max-logo.png',
-      'hulu':        'assets/icon/hulu-logo.png',
-      'sonyliv':     'assets/icon/sonyliv-logo.png',
-      'zee5':        'assets/icon/zee5-logo.png',
-      'crunchyroll': 'assets/icon/crunchyroll-logo.png',
-      'paramount':   'assets/icon/paramount-logo.png',
-      'mxplayer':    'assets/icon/mxplayer-logo.png',
-      'youtube':     'assets/icon/youtube-logo.png',
-      'discovery':   'assets/icon/discovery-logo.png',
-    };
-    return map[source];
-  }
-
   @override
   Widget build(BuildContext context) {
-    final color = _colorForSource(item.source);
-    final asset = _assetForSource(item.source);
     final dateStr = DateFormat('d MMM yyyy').format(item.latestViewedAt);
 
     return Container(
@@ -184,18 +145,7 @@ class _FriendItemTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Platform logo
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.all(3),
-            child: asset != null
-                ? Image.asset(asset, fit: BoxFit.contain)
-                : Icon(Icons.tv, color: color, size: 22),
-          ),
+          PlatformIcon(source: item.source),
           const SizedBox(width: 12),
           // Title + friend names
           Expanded(

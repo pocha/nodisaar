@@ -6,6 +6,7 @@ import 'firebase.dart';
 import 'enable_notifications_screen.dart';
 import 'mypicks_screen.dart';
 import 'friends_screen.dart';
+import 'top_picks_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? incomingFriendUsername;
@@ -38,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     PackageInfo.fromPlatform().then(
       (info) { if (mounted) setState(() => _version = info.version); },
     );
@@ -159,6 +160,7 @@ class _HomeScreenState extends State<HomeScreen>
           tabs: const [
             Tab(text: 'My Picks'),
             Tab(text: "Friends' Picks"),
+            Tab(text: 'Top Picks'),
           ],
         ),
       ),
@@ -167,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen>
         children: [
           MyPicksScreen(key: _myPicksKey),
           FriendsScreen(key: _friendsKey),
+          const TopPicksScreen(),
         ],
       ),
     );

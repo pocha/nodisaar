@@ -15,8 +15,8 @@ class WatchItem {
     this.friendUsername,
   });
 
-  // Unique id matching Firestore watchItemId
-  String get id => '${source}_${_slugify(href)}';
+  // Unique id matching Firestore watchItemId — title-based for cross-platform deduplication
+  String get id => _slugify(title);
 
   static String _slugify(String s) =>
       s.toLowerCase()
