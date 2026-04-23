@@ -52,4 +52,7 @@ if $BUILD_IOS; then
     --apiIssuer $ASC_ISSUER_ID
 fi
 
+echo "Deploying web to Firebase Hosting..."
+firebase deploy --only hosting
+
 echo "Done! 🚀 Version ${VERSION} deployed."
