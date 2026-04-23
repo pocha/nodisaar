@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'
     show FirebaseMessaging, AuthorizationStatus;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'firebase.dart';
 import 'enable_notifications_screen.dart';
 import 'mypicks_screen.dart';
@@ -32,11 +33,15 @@ class _HomeScreenState extends State<HomeScreen>
   late final TabController _tabController;
   final _myPicksKey = GlobalKey<MyPicksScreenState>();
   final _friendsKey = GlobalKey<FriendsScreenState>();
+  String _version = '';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    PackageInfo.fromPlatform().then(
+      (info) { if (mounted) setState(() => _version = info.version); },
+    );
 
     if (widget.incomingFriendUsername != null) {
       _handleIncomingFriend(widget.incomingFriendUsername!);
@@ -102,16 +107,31 @@ class _HomeScreenState extends State<HomeScreen>
       appBar: AppBar(
         backgroundColor: const Color(0xFF0e0e11),
         elevation: 0,
-        title: ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFFe50914), Color(0xFF00a8e1)],
-          ).createShader(bounds),
-          child: const Text('Nodisaar',
-              style: TextStyle(
-                  fontFamily: 'Syne',
-                  fontWeight: FontWeight.w800,
-                  fontSize: 22,
-                  color: Colors.white)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Color(0xFFe50914), Color(0xFF00a8e1)],
+              ).createShader(bounds),
+              child: const Text('Nodisaar',
+                  style: TextStyle(
+                      fontFamily: 'Syne',
+                      fontWeight: FontWeight.w800,
+                      fontSize: 22,
+                      color: Colors.white)),
+            ),
+            if (_version.isNotEmpty) ...[
+              const SizedBox(width: 6),
+              Text('v$_version',
+                  style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF7a7a8c),
+                      fontWeight: FontWeight.w500)),
+            ],
+          ],
         ),
         actions: [
           IconButton(

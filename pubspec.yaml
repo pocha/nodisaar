@@ -1,7 +1,7 @@
 name: nodisaar
 description: Curate & share your OTT favourites
 publish_to: 'none'
-version: 1.1.1+2
+version: 1.1.2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -19,6 +19,7 @@ dependencies:
   app_links: ^6.3.2
   intl: ^0.19.0
   http: ^1.6.0
+  package_info_plus: ^9.0.1
 
 dev_dependencies:
   flutter_test:
